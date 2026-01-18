@@ -11,35 +11,80 @@ An AI-powered backend service that analyzes structured business data and unstruc
 - **Async processing** support
 - **Comprehensive error handling** and validation
 - **Clean architecture** with separation of concerns
+- **Docker support** for easy deployment
+- **Web frontend** included for easy testing
 
 ## Architecture
 
 ```
-app/
-├── main.py              # FastAPI application entry point
-├── config.py            # Configuration management
-├── models/              # Pydantic schemas for request/response
-│   └── schemas.py
-├── services/            # Business logic layer
-│   ├── ai_service.py    # LLM interaction service
-│   ├── prompt_builder.py # Prompt engineering
-│   └── cache_service.py  # Caching layer
-└── api/                 # API routes and controllers
-    └── routes.py
+.
+├── app/                    # Core application
+│   ├── main.py            # FastAPI application entry point
+│   ├── config.py          # Configuration management
+│   ├── models/            # Pydantic schemas for request/response
+│   │   └── schemas.py
+│   ├── services/          # Business logic layer
+│   │   ├── ai_service.py  # LLM interaction service
+│   │   ├── prompt_builder.py # Prompt engineering
+│   │   └── cache_service.py  # Caching layer
+│   └── api/               # API routes and controllers
+│       └── routes.py
+├── frontend/              # Web frontend
+│   └── index.html
+├── Dockerfile             # Docker configuration
+├── docker-compose.yml     # Docker Compose configuration
+├── requirements.txt       # Python dependencies (8 packages)
+└── README.md             # This file
 ```
 
-## Setup & Installation
+## Quick Start
 
 ### Prerequisites
 
-- Python 3.9 or higher
+- Python 3.9 or higher (or Docker)
 - Anthropic Claude API key
 
-### Installation Steps
+### Option 1: Using Docker (Recommended)
 
-1. **Clone or navigate to the project directory:**
+1. **Clone the repository:**
    ```bash
-   cd /Volumes/HashSSD/mywork/LLMAssesment
+   git clone https://github.com/hashdev89/smart-summary-insight-service.git
+   cd smart-summary-insight-service
+   ```
+
+2. **Create a `.env` file:**
+   ```bash
+   cat > .env << EOL
+   ANTHROPIC_API_KEY=your-api-key-here
+   CLAUDE_MODEL=claude-3-5-sonnet-20241022
+   MAX_TOKENS=2000
+   TEMPERATURE=0.7
+   ENABLE_CACHE=true
+   CACHE_TTL_SECONDS=3600
+   HOST=0.0.0.0
+   PORT=8000
+   EOL
+   ```
+
+3. **Run with Docker Compose:**
+   ```bash
+   docker-compose up -d
+   ```
+
+   The service will be available at `http://localhost:8000`
+
+4. **Or build and run manually:**
+   ```bash
+   docker build -t smart-summary-service .
+   docker run -d -p 8000:8000 --env-file .env smart-summary-service
+   ```
+
+### Option 2: Local Development
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/hashdev89/smart-summary-insight-service.git
+   cd smart-summary-insight-service
    ```
 
 2. **Create a virtual environment:**
@@ -53,58 +98,54 @@ app/
    pip install -r requirements.txt
    ```
 
-4. **Configure environment variables:**
-   
-   Create a `.env` file in the project root:
+4. **Create a `.env` file:**
    ```bash
-   cp .env.example .env
-   ```
-   
-   Edit `.env` and add your Anthropic API key:
-   ```
+   cat > .env << EOL
    ANTHROPIC_API_KEY=your-api-key-here
+   CLAUDE_MODEL=claude-3-5-sonnet-20241022
+   MAX_TOKENS=2000
+   TEMPERATURE=0.7
+   ENABLE_CACHE=true
+   CACHE_TTL_SECONDS=3600
+   HOST=0.0.0.0
+   PORT=8000
+   EOL
    ```
 
-## Running the Service
-
-### Quick Start (Easiest Way)
-
-```bash
-# Option 1: Use the start script
-./start_server.sh
-
-# Option 2: Manual start
-source venv/bin/activate
-python -m app.main
-```
-
-Or using uvicorn directly:
-
-```bash
-source venv/bin/activate
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-The service will be available at:
-- **API**: `http://localhost:8000`
-- **Interactive API Docs**: `http://localhost:8000/docs` (Test the API here!)
-- **Alternative Docs**: `http://localhost:8000/redoc`
-
-### Using the Web Frontend
-
-A simple HTML frontend is included! After starting the server:
-
-1. Open `frontend/index.html` in your web browser
-2. Or serve it with a simple HTTP server:
+5. **Run the service:**
    ```bash
-   # Python 3
-   cd frontend && python -m http.server 8080
-   # Then open http://localhost:8080
+   python -m app.main
    ```
 
-The frontend provides a user-friendly interface to test the API without writing any code!
+   Or using uvicorn directly:
+   ```bash
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   ```
 
-## API Usage
+## Using the Service
+
+### Web Frontend
+
+A simple HTML frontend is included for easy testing:
+
+1. **Start the backend server** (using Docker or locally)
+
+2. **Serve the frontend:**
+   ```bash
+   cd frontend
+   python3 -m http.server 8080
+   ```
+
+3. **Open in browser:** `http://localhost:8080`
+
+   The frontend provides a user-friendly interface to test the API without writing any code!
+
+### API Endpoints
+
+- **API Base**: `http://localhost:8000`
+- **Interactive API Docs**: `http://localhost:8000/docs` (Swagger UI)
+- **Alternative Docs**: `http://localhost:8000/redoc` (ReDoc)
+- **Health Check**: `http://localhost:8000/api/v1/health`
 
 ### POST /api/v1/analyze
 
@@ -175,7 +216,7 @@ Analyze structured data and free-text notes.
 curl -X POST "http://localhost:8000/api/v1/analyze" \
   -H "Content-Type: application/json" \
   -d '{
-    "notes": "Customer reported issue with payment processing",
+    "notes": ["Customer reported issue with payment processing"],
     "structured_data": {
       "data": {
         "customer_id": "12345",
@@ -212,7 +253,7 @@ Environment variables (in `.env` file):
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `ANTHROPIC_API_KEY` | Your Anthropic API key | Required |
+| `ANTHROPIC_API_KEY` | Your Anthropic API key | **Required** |
 | `CLAUDE_MODEL` | Claude model version | `claude-3-5-sonnet-20241022` |
 | `MAX_TOKENS` | Maximum tokens in response | `2000` |
 | `TEMPERATURE` | Model temperature (0-1) | `0.7` |
@@ -220,6 +261,34 @@ Environment variables (in `.env` file):
 | `CACHE_TTL_SECONDS` | Cache time-to-live | `3600` |
 | `HOST` | Server host | `0.0.0.0` |
 | `PORT` | Server port | `8000` |
+
+## Dependencies
+
+The project uses only 8 essential Python packages:
+
+- `fastapi` - Web framework
+- `uvicorn[standard]` - ASGI server
+- `pydantic` - Data validation
+- `pydantic-settings` - Settings management
+- `anthropic` - Claude API client
+- `python-dotenv` - Environment variable management
+- `python-multipart` - Form data support
+- `cachetools` - Caching implementation
+
+## Docker & CI/CD
+
+### Docker
+
+The project includes:
+- **Dockerfile** - Multi-stage build for optimized image size
+- **docker-compose.yml** - Easy orchestration with environment variables
+
+### GitHub Actions
+
+Automated CI/CD pipeline (`.github/workflows/docker-build-push.yml`):
+- Automatically builds and pushes Docker image on push to `main` branch
+- Supports manual workflow dispatch with custom tags
+- Pushes to Docker Hub: `hashdev89/llmassesment`
 
 ## Design Decisions
 
@@ -245,40 +314,6 @@ The service uses a structured prompt design:
 - Automatic truncation when input exceeds limits
 - Preserves structure by truncating from the middle
 
-## Testing
-
-Run tests with pytest:
-
-```bash
-pytest tests/
-```
-
-Basic test coverage includes:
-- API endpoint validation
-- Prompt builder functionality
-- Health check endpoint
-
-## Evaluation & Improvement
-
-### Output Quality Evaluation
-
-To evaluate and improve outputs:
-
-1. **Confidence Scores**: The service returns confidence scores (0.0-1.0) based on data completeness
-2. **A/B Testing**: Compare different prompt variations
-3. **Human Review**: Sample outputs for quality assessment
-4. **Metrics**: Track processing time, token usage, and error rates
-
-### Potential Improvements
-
-- **Fine-tuning**: Fine-tune prompts based on domain-specific feedback
-- **Output Validation**: Add schema validation for LLM responses
-- **Retry Logic**: Implement exponential backoff for API failures
-- **Rate Limiting**: Add rate limiting for production use
-- **Monitoring**: Add logging and metrics collection
-- **Batch Processing**: Support batch analysis requests
-- **Streaming**: Support streaming responses for long analyses
-
 ## Production Considerations
 
 Before deploying to production:
@@ -286,7 +321,7 @@ Before deploying to production:
 1. **Security**:
    - Use environment variables for API keys (never commit `.env`)
    - Add authentication/authorization
-   - Configure CORS appropriately
+   - Configure CORS appropriately (currently allows all origins)
    - Add rate limiting
 
 2. **Performance**:
@@ -296,7 +331,7 @@ Before deploying to production:
 
 3. **Monitoring**:
    - Add structured logging
-   - Implement health checks
+   - Implement health checks (already included)
    - Add metrics collection (Prometheus, etc.)
    - Set up error tracking (Sentry, etc.)
 
@@ -309,3 +344,7 @@ Before deploying to production:
 
 Internal use only.
 
+## Repository
+
+- **GitHub**: https://github.com/hashdev89/smart-summary-insight-service
+- **Docker Hub**: https://hub.docker.com/r/hashdev89/llmassesment
