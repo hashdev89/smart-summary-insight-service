@@ -348,3 +348,5 @@ Internal use only.
 
 - **GitHub**: https://github.com/hashdev89/smart-summary-insight-service
 - **Docker Hub**: https://hub.docker.com/r/hashdev89/llmassesment
+
+Design & Developed by Hash with help of AI
