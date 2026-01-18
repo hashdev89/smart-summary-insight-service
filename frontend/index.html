@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Summary & Insight Service</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        border: "hsl(var(--border))",
+                        input: "hsl(var(--input))",
+                        ring: "hsl(var(--ring))",
+                        background: "hsl(var(--background))",
+                        foreground: "hsl(var(--foreground))",
+                        primary: {
+                            DEFAULT: "hsl(var(--primary))",
+                            foreground: "hsl(var(--primary-foreground))",
+                        },
+                        secondary: {
+                            DEFAULT: "hsl(var(--secondary))",
+                            foreground: "hsl(var(--secondary-foreground))",
+                        },
+                        destructive: {
+                            DEFAULT: "hsl(var(--destructive))",
+                            foreground: "hsl(var(--destructive-foreground))",
+                        },
+                        muted: {
+                            DEFAULT: "hsl(var(--muted))",
+                            foreground: "hsl(var(--muted-foreground))",
+                        },
+                        accent: {
+                            DEFAULT: "hsl(var(--accent))",
+                            foreground: "hsl(var(--accent-foreground))",
+                        },
+                        popover: {
+                            DEFAULT: "hsl(var(--popover))",
+                            foreground: "hsl(var(--popover-foreground))",
+                        },
+                        card: {
+                            DEFAULT: "hsl(var(--card))",
+                            foreground: "hsl(var(--card-foreground))",
+                        },
+                    },
+                    borderRadius: {
+                        lg: "var(--radius)",
+                        md: "calc(var(--radius) - 2px)",
+                        sm: "calc(var(--radius) - 4px)",
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 222.2 84% 4.9%;
+            --primary: 221.2 83.2% 53.3%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96.1%;
+            --secondary-foreground: 222.2 47.4% 11.2%;
+            --muted: 210 40% 96.1%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96.1%;
+            --accent-foreground: 222.2 47.4% 11.2%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%;
+            --input: 214.3 31.8% 91.4%;
+            --ring: 221.2 83.2% 53.3%;
+            --radius: 0.5rem;
+        }
+        * {
+            border-color: hsl(var(--border));
+        }
+        body {
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-background">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <div class="text-center mb-8 space-y-2">
+            <h1 class="text-4xl font-bold tracking-tight">
+                Smart Summary & Insight Service
+            </h1>
+            <p class="text-muted-foreground text-lg">
+                AI-powered analysis of structured data and notes
+            </p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="card rounded-lg border bg-card text-card-foreground shadow-sm p-6 mb-6">
+            <!-- API URL Input with Status Check -->
+            <div class="mb-6 space-y-2">
+                <div class="flex items-center justify-between">
+                    <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        API Base URL
+                    </label>
+                    <button 
+                        id="checkStatusBtn"
+                        onclick="checkBackendStatus()"
+                        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-8 px-3 text-xs"
+                    >
+                        <span id="statusText">Check Status</span>
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <input 
+                        type="text" 
+                        id="apiUrl" 
+                        value="http://localhost:8000/api/v1" 
+                        placeholder="http://localhost:8000/api/v1"
+                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                    <div id="statusIndicator" class="flex items-center px-3">
+                        <span id="statusDot" class="w-3 h-3 rounded-full bg-muted"></span>
+                    </div>
+                </div>
+                <p id="statusMessage" class="text-xs text-muted-foreground"></p>
+            </div>
+
+            <!-- Notes Input -->
+            <div class="mb-6 space-y-2">
+                <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Free-Text Notes <span class="text-destructive">*</span>
+                </label>
+                <textarea 
+                    id="notes" 
+                    rows="6"
+                    placeholder="Enter notes here, one per line or separated by commas..."
+                    class="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
+                ></textarea>
+                <p class="text-xs text-muted-foreground">One note per line or comma-separated</p>
+            </div>
+
+            <!-- Structured Data Input -->
+            <div class="mb-6 space-y-2">
+                <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Structured Data (JSON - optional)
+                </label>
+                <textarea 
+                    id="structuredData" 
+                    rows="5"
+                    placeholder='{"customer_id": "12345", "event_type": "support_ticket", "priority": "high"}'
+                    class="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
+                ></textarea>
+                <p class="text-xs text-muted-foreground">Enter valid JSON format</p>
+            </div>
+
+            <!-- Analyze Button -->
+            <button 
+                id="analyzeBtn" 
+                onclick="analyze()"
+                class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
+            >
+                <span id="btnText">Analyze</span>
+            </button>
+        </div>
+
+        <!-- Results Card -->
+        <div id="result" class="hidden card rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+            <!-- Results will be inserted here -->
+        </div>
+
+        <!-- Footer - Fixed at bottom -->
+        <footer class="mt-auto pt-8 pb-4 text-center text-sm text-muted-foreground border-t border-border">
+            <p class="font-medium">Design & Developed by Hash with help of AI</p>
+        </footer>
+    </div>
+
+    <script>
+        // Check backend status
+        async function checkBackendStatus() {
+            const statusBtn = document.getElementById('checkStatusBtn');
+            const statusText = document.getElementById('statusText');
+            const statusDot = document.getElementById('statusDot');
+            const statusMessage = document.getElementById('statusMessage');
+            const apiUrl = document.getElementById('apiUrl').value.trim();
+            const baseUrl = apiUrl.replace('/api/v1', '');
+            
+            statusBtn.disabled = true;
+            statusText.textContent = 'Checking...';
+            statusDot.className = 'w-3 h-3 rounded-full bg-yellow-500 animate-pulse';
+            statusMessage.textContent = 'Checking backend connection...';
+            
+            try {
+                const response = await fetch(`${baseUrl}/api/v1/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    signal: AbortSignal.timeout(3000) // 3 second timeout
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    statusDot.className = 'w-3 h-3 rounded-full bg-green-500';
+                    statusMessage.textContent = `✅ Backend is running - ${data.service || 'Connected'}`;
+                    statusMessage.className = 'text-xs text-green-600';
+                } else {
+                    throw new Error(`Backend returned status ${response.status}`);
+                }
+            } catch (error) {
+                statusDot.className = 'w-3 h-3 rounded-full bg-red-500';
+                if (error.name === 'AbortError' || error.message.includes('Failed to fetch')) {
+                    statusMessage.textContent = '❌ Backend is not running. Please start the backend server.';
+                    statusMessage.className = 'text-xs text-red-600';
+                } else {
+                    statusMessage.textContent = `❌ Error: ${error.message}`;
+                    statusMessage.className = 'text-xs text-red-600';
+                }
+            } finally {
+                statusBtn.disabled = false;
+                statusText.textContent = 'Check Status';
+            }
+        }
+        
+        // Auto-check status on page load
+        window.addEventListener('load', function() {
+            setTimeout(checkBackendStatus, 500);
+        });
+        
+        async function analyze() {
+            const btn = document.getElementById('analyzeBtn');
+            const btnText = document.getElementById('btnText');
+            const resultDiv = document.getElementById('result');
+            const apiUrl = document.getElementById('apiUrl').value.trim();
+            const notesInput = document.getElementById('notes').value.trim();
+            const structuredDataInput = document.getElementById('structuredData').value.trim();
+            
+            if (!notesInput) {
+                alert('Please enter at least one note');
+                return;
+            }
+            
+            // Disable button and show loading
+            btn.disabled = true;
+            btnText.textContent = 'Analyzing...';
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-12 space-y-4">
+                    <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+                    <p class="text-muted-foreground">Analyzing your data...</p>
+                </div>
+            `;
+            
+            try {
+                // Parse notes
+                const notes = notesInput.includes('\n') 
+                    ? notesInput.split('\n').filter(n => n.trim())
+                    : notesInput.split(',').map(n => n.trim()).filter(n => n);
+                
+                // Parse structured data if provided
+                let structuredData = null;
+                if (structuredDataInput) {
+                    try {
+                        const parsed = JSON.parse(structuredDataInput);
+                        structuredData = { data: parsed };
+                    } catch (e) {
+                        throw new Error('Invalid JSON in structured data: ' + e.message);
+                    }
+                }
+                
+                // Make API call
+                const response = await fetch(`${apiUrl}/analyze`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        notes: notes,
+                        structured_data: structuredData
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: response.statusText }));
+                    throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                displayResults(data);
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+                        <div class="flex items-start space-x-3">
+                            <svg class="h-5 w-5 text-destructive mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div class="flex-1">
+                                <h3 class="text-sm font-semibold text-destructive mb-1">Error</h3>
+                                <p class="text-sm text-destructive/90">${error.message}</p>
+                                <p class="text-xs text-muted-foreground mt-2">Make sure the backend server is running at ${apiUrl.replace('/api/v1', '')}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = 'Analyze';
+            }
+        }
+        
+        function displayResults(data) {
+            const resultDiv = document.getElementById('result');
+            
+            const getBadgeClass = (priority) => {
+                const classes = {
+                    'high': 'bg-destructive/10 text-destructive border-destructive/20',
+                    'medium': 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20',
+                    'low': 'bg-green-500/10 text-green-700 border-green-500/20'
+                };
+                return classes[priority?.toLowerCase()] || classes.medium;
+            };
+            
+            const getBorderClass = (priority) => {
+                const classes = {
+                    'high': 'border-l-destructive',
+                    'medium': 'border-l-yellow-500',
+                    'low': 'border-l-green-500'
+                };
+                return classes[priority?.toLowerCase()] || classes.medium;
+            };
+            
+            let insightsHtml = '';
+            if (data.insights && data.insights.length > 0) {
+                insightsHtml = data.insights.map(insight => {
+                    const priority = insight.priority || 'medium';
+                    return `
+                        <div class="rounded-lg border-l-4 ${getBorderClass(priority)} bg-muted/50 p-4 mb-3">
+                            <div class="flex items-start justify-between mb-2">
+                                <h4 class="font-semibold text-foreground">${insight.title}</h4>
+                                <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors ${getBadgeClass(priority)}">
+                                    ${priority.toUpperCase()}
+                                </span>
+                            </div>
+                            <p class="text-sm text-muted-foreground mb-2">${insight.description}</p>
+                            ${insight.category ? `<p class="text-xs text-muted-foreground">Category: ${insight.category}</p>` : ''}
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                insightsHtml = '<p class="text-sm text-muted-foreground">No insights generated.</p>';
+            }
+            
+            let actionsHtml = '';
+            if (data.next_actions && data.next_actions.length > 0) {
+                actionsHtml = data.next_actions.map(action => {
+                    const priority = action.priority || 'medium';
+                    return `
+                        <div class="rounded-lg border-l-4 ${getBorderClass(priority)} bg-muted/50 p-4 mb-3">
+                            <div class="flex items-start justify-between mb-2">
+                                <h4 class="font-semibold text-foreground">${action.action}</h4>
+                                <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors ${getBadgeClass(priority)}">
+                                    ${priority.toUpperCase()}
+                                </span>
+                            </div>
+                            ${action.rationale ? `<p class="text-sm text-muted-foreground">${action.rationale}</p>` : ''}
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                actionsHtml = '<p class="text-sm text-muted-foreground">No actions suggested.</p>';
+            }
+            
+            const metadata = data.metadata || {};
+            const confidencePercent = (metadata.confidence_score * 100).toFixed(1);
+            const confidenceColor = metadata.confidence_score >= 0.7 ? 'text-green-600' : 
+                                   metadata.confidence_score >= 0.4 ? 'text-yellow-600' : 'text-destructive';
+            
+            resultDiv.innerHTML = `
+                <!-- Summary Section -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-semibold tracking-tight mb-4">Summary</h2>
+                    <div class="rounded-lg border bg-muted/50 p-6">
+                        <p class="text-foreground leading-relaxed">${data.summary || 'No summary available.'}</p>
+                    </div>
+                </div>
+                
+                <!-- Insights Section -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-semibold tracking-tight mb-4">Key Insights</h2>
+                    ${insightsHtml}
+                </div>
+                
+                <!-- Actions Section -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-semibold tracking-tight mb-4">Suggested Next Actions</h2>
+                    ${actionsHtml}
+                </div>
+                
+                <!-- Metadata Section -->
+                <div>
+                    <h2 class="text-2xl font-semibold tracking-tight mb-4">Metadata</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="rounded-lg border bg-card p-4">
+                            <div class="text-xs text-muted-foreground mb-1">Confidence Score</div>
+                            <div class="text-2xl font-bold ${confidenceColor}">${confidencePercent}%</div>
+                        </div>
+                        <div class="rounded-lg border bg-card p-4">
+                            <div class="text-xs text-muted-foreground mb-1">Model Version</div>
+                            <div class="text-sm font-semibold text-foreground">${metadata.model_version || 'N/A'}</div>
+                        </div>
+                        ${metadata.processing_time_ms ? `
+                        <div class="rounded-lg border bg-card p-4">
+                            <div class="text-xs text-muted-foreground mb-1">Processing Time</div>
+                            <div class="text-2xl font-bold text-foreground">${metadata.processing_time_ms.toFixed(0)} ms</div>
+                        </div>
+                        ` : ''}
+                        ${metadata.tokens_used ? `
+                        <div class="rounded-lg border bg-card p-4">
+                            <div class="text-xs text-muted-foreground mb-1">Tokens Used</div>
+                            <div class="text-2xl font-bold text-foreground">${metadata.tokens_used}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Allow Ctrl+Enter or Cmd+Enter to submit
+        document.getElementById('notes').addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                analyze();
+            }
+        });
+        
+        document.getElementById('structuredData').addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                analyze();
+            }
+        });
+    </script>
+</body>
+</html>
