@@ -39,7 +39,10 @@ async def root():
         "version": "1.0.0",
         "endpoints": {
             "analyze": "/api/v1/analyze",
+            "batch_analyze": "/api/v1/batch/analyze",
+            "batch_status": "/api/v1/batch/{job_id}/status",
             "health": "/api/v1/health",
+            "ready": "/api/v1/ready",
             "docs": "/docs"
         }
     }

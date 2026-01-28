@@ -124,9 +124,32 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ## Using the Service
 
+### See the backend (and batch) working
+
+1. **Start the backend** (from project root):
+   ```bash
+   source venv/bin/activate   # or: . venv/bin/activate
+   python -m app.main
+   ```
+   Or: `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
+
+2. **Optional: try batch in terminal**
+   - Submit a batch (returns `job_id`):
+     ```bash
+     curl -X POST "http://localhost:8000/api/v1/batch/analyze" \
+       -H "Content-Type: application/json" \
+       -d '{"records":[{"notes":"First note."},{"notes":"Second note."}]}'
+     ```
+   - Poll progress and results:
+     ```bash
+     curl "http://localhost:8000/api/v1/batch/YOUR_JOB_ID/status"
+     ```
+
+3. **Interactive API docs:** open `http://localhost:8000/docs` and try `POST /api/v1/batch/analyze` and `GET /api/v1/batch/{job_id}/status`.
+
 ### Web Frontend
 
-A simple HTML frontend is included for easy testing:
+A simple HTML frontend is included for easy testing (single analyze + **batch analyze**):
 
 1. **Start the backend server** (using Docker or locally)
 
@@ -138,7 +161,7 @@ A simple HTML frontend is included for easy testing:
 
 3. **Open in browser:** `http://localhost:8080`
 
-The frontend provides a user-friendly interface to test the API without writing any code!
+Use **Single Analyze** for one request, or **Batch Analyze** to submit up to 500 records and track progress/results.
 
 ### API Endpoints
 
